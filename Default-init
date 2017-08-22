@@ -93,7 +93,7 @@ fi
 # -----------------------------------------------------------------------------
 # Due to a gdm issue that results in warped login backgrounds on multiple displays
 # this script aims to detect the connected displays and disable the secondary monitor
-# until a login is achieved at which point the PreSession script will reinitilize all displays 
+# until a login is achieved at which point the PreSession script will reinitilize all displays
 # according to established standards, though special modifications may have to be made.
 # -----------------------------------------------------------------------------
 # Gets the number of connected displays (a physically connected but off monitor is still connected)
@@ -115,7 +115,7 @@ else
     xrandr --output $1 --auto --output $2 --off
   elif [ $2 == "DP-0" ] && [ $1 == "DP-2" ]; then
     xrandr --output $3 --auto --output $1 --off
-  # 2017 - Older Machines with one display port and one DVI
+  # 2017 - Older Z220/230/240 Machines with one display port and one DVI
   elif [ $1 == "DP-1" ] && [ $2 == "DVI-I-1" ]; then
     xrandr --output $1 --auto --output $2 --off
   elif [ $2 == "DP-1" ] && [ $1 == "DVI-I-1" ]; then
