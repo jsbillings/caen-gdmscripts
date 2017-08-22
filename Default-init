@@ -1,0 +1,128 @@
+#!/bin/sh
+# Stolen from the debian kdm setup, aren't I sneaky
+# Plus a lot of fun stuff added
+#  -George
+
+PATH="/usr/bin:$PATH"
+OLD_IFS=$IFS
+
+gdmwhich () {
+  COMMAND="$1"
+  OUTPUT=
+  IFS=:
+  for dir in $PATH
+  do
+    if test -x "$dir/$COMMAND" ; then
+      if test "x$OUTPUT" = "x" ; then
+        OUTPUT="$dir/$COMMAND"
+      fi
+    fi
+  done
+  IFS=$OLD_IFS
+  echo "$OUTPUT"
+}
+
+sysresources=/etc/X11/Xresources
+
+# merge in defaults
+if [ -f "$sysresources" ]; then
+    xrdb -merge "$sysresources"
+fi
+
+
+
+sysmodmap=/etc/X11/Xmodmap
+
+XMODMAP=`gdmwhich xmodmap`
+if [ "x$XMODMAP" != "x" ] ; then
+  if [ "x$GDM_PARENT_DISPLAY" = "x" ]; then
+    if [ -f $sysmodmap ]; then
+      $XMODMAP $sysmodmap
+    fi
+  else
+    ( DISPLAY=$GDM_PARENT_DISPLAY XAUTHORITY=$GDM_PARENT_XAUTHORITY $XMODMAP -pke ) | $XMODMAP -
+  fi
+
+  #
+  # Switch Sun's Alt and Meta mod mappings
+  #
+
+  UNAME=`gdmwhich uname`
+  PROCESSOR=`$UNAME -p`
+  if [ "x$PROCESSOR" = "xsparc" ]; then
+    if $XMODMAP | grep mod4 | grep Alt > /dev/null 2>/dev/null
+    then
+      $XMODMAP -e "clear Mod1" \
+               -e "clear Mod4" \
+               -e "add Mod1 = Alt_L" \
+               -e "add Mod1 = Alt_R" \
+               -e "add Mod4 = Meta_L" \
+               -e "add Mod4 = Meta_R"
+    fi
+  fi
+fi
+
+SETXKBMAP=`gdmwhich setxkbmap`
+if [ "x$SETXKBMAP" != "x" ] ; then
+  # FIXME: is this all right?  Is this completely on crack?
+  # What this does is move the xkb configuration from the GDM_PARENT_DISPLAY
+  # FIXME: This should be done in code.  Or there must be an easier way ...
+  if [ -n "$GDM_PARENT_DISPLAY" ]; then
+    XKBSETUP=`( DISPLAY=$GDM_PARENT_DISPLAY XAUTHORITY=$GDM_PARENT_XAUTHORITY $SETXKBMAP -v )`
+    if [ -n "$XKBSETUP" ]; then
+      XKBKEYMAP=`echo "$XKBSETUP" | grep '^keymap' | awk '{ print $2 }'`
+      XKBTYPES=`echo "$XKBSETUP" | grep '^types' | awk '{ print $2 }'`
+      XKBCOMPAT=`echo "$XKBSETUP" | grep '^compat' | awk '{ print $2 }'`
+      XKBSYMBOLS=`echo "$XKBSETUP" | grep '^symbols' | awk '{ print $2 }'`
+      XKBGEOMETRY=`echo "$XKBSETUP" | grep '^geometry' | awk '{ print $2 }'`
+      if [ -n "$XKBKEYMAP" ]; then
+        $SETXKBMAP -keymap "$XKBKEYMAP"
+      elif [ -n "$XKBTYPES" -a -n "$XKBCOMPAT" -a -n "$XKBSYMBOLS" -a -n "$XKBGEOMETRY" ]; then
+        $SETXKBMAP -types "$XKBTYPES" -compat "$XKBCOMPAT" -symbols "$XKBSYMBOLS" -geometry "$XKBGEOMETRY"
+      elif [ -n "$XKBTYPES" -a -n "$XKBCOMPAT" -a -n "$XKBSYMBOLS" ]; then
+        $SETXKBMAP -types "$XKBTYPES" -compat "$XKBCOMPAT" -symbols "$XKBSYMBOLS"
+      elif [ -n "$XKBSYMBOLS" ]; then
+        $SETXKBMAP -symbols "$XKBSYMBOLS"
+      fi
+    fi
+  fi
+fi
+
+# -----------------------------------------------------------------------------
+#                         Automatic Display Handling
+# -----------------------------------------------------------------------------
+# Due to a gdm issue that results in warped login backgrounds on multiple displays
+# this script aims to detect the connected displays and disable the secondary monitor
+# until a login is achieved at which point the PreSession script will reinitilize all displays 
+# according to established standards, though special modifications may have to be made.
+# -----------------------------------------------------------------------------
+# Gets the number of connected displays (a physically connected but off monitor is still connected)
+NUM_DISPLAYS=$(xrandr | grep -w connected | wc -l)
+#Creates a space separated list of all of the connected displays (Ex: DP-0 DVI-I-1)
+LIST_DISPLAYS=$(xrandr | grep -w connected | cut -d' ' -f1)
+# Allow the connected displays to be called in the order they appear $1 $2 ...
+set -- $LIST_DISPLAYS
+# If the system has only one display or more than two, let gdm handle it automatically
+if [ $NUM_DISPLAYS != '2']; then
+  exit 0 #Should I set the only display manually or just let gdm take over?
+else
+  echo "More than one display detected."
+  # Begin checking detected displays against known configurations
+  # The "first" display is ambiguous, so the reverse of every check has to occur
+  # ---------------------------------------------------------------------------
+  # 2017 - New Z240s with 4 miniDisplayPort Connectors
+  if [ $1 == "DP-0" ] && [ $2 == "DP-2" ]; then
+    xrandr --output $1 --auto --output $2 --off
+  elif [ $2 == "DP-0" ] && [ $1 == "DP-2" ]; then
+    xrandr --output $3 --auto --output $1 --off
+  # 2017 - Older Machines with one display port and one DVI
+  elif [ $1 == "DP-1" ] && [ $2 == "DVI-I-1" ]; then
+    xrandr --output $1 --auto --output $2 --off
+  elif [ $2 == "DP-1" ] && [ $1 == "DVI-I-1" ]; then
+    xrandr --output $2 --auto --output $1 --off
+  else
+    exit 0
+  fi
+fi
+
+exit 0

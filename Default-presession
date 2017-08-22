@@ -1,0 +1,35 @@
+#!/bin/sh
+# -----------------------------------------------------------------------------
+# This is the second of the two gdm display handling scripts. This one runs after
+# login and sets the connected displays according to established standards, as
+# well as any custom configurations as needed.
+# -----------------------------------------------------------------------------
+# Same as the inital script, get the number of connected displays
+NUM_DISPLAYS=$(xrandr | grep -w connected | wc -l)
+#Propogates a list of all the displays connected as a space separated list(example: DP-0 DVI-I-1)
+LIST_DISPLAYS=$(xrandr | grep -w connected | cut -d' ' -f1)
+# Allow the connected displays to be called in the order they appear $1 $2 ...
+set -- $LIST_DISPLAYS
+if [ $NUM_DISPLAYS != '2' ]; then
+  exit 0
+else
+  # Begin checking detected displays against known configurations
+  # The "first" display is ambiguous, so the reverse of every check has to occur
+  # ---------------------------------------------------------------------------
+  #                      Known Configurations / Standards
+  # Display Port Monitor on the Left, DVI (or higher numbered DP) on the right
+  # The --auto flag is required even with the --right-of flag if you want the display to turn on
+  # 2017 - New Z240s with 4 miniDisplayPort Connectors
+  if [ $1 == "DP-0" ] && [ $2 == "DP-2" ]; then
+    xrandr --output $1 --primary --output $2 --auto --right-of $1
+  elif [ $2 == "DP-0" ] && [ $1 == "DP-2" ]; then
+    xrandr --output $2 --primary --output $1 --auto --right-of $2
+  # 2017 - Older Machines with one display port and one DVI
+  elif [ $1 == "DP-1" ] && [ $2 == "DVI-I-1" ]; then
+    xrandr --output $1 --primary --output $2 --auto --right-of $1
+  elif [ $2 == "DP-1" ] && [ $1 == "DVI-I-1" ]; then
+    xrandr --output $2 --primary --output $1 --auto --right-of $2
+  else
+    exit 0 # Do not want this to occur as it would leave one monitor off
+  fi
+fi
