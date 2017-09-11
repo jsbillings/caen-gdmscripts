@@ -31,9 +31,9 @@ else
   # will not appear if the wall mounted displays are off
   # The adapters cause DP-0->DP-3, DP-2->DP-1, DP-4->DP-5, DP-6->DP-7
   elif [ $1 == 'DP-3' ] && [[ $2 == 'DP-'[3,7,1] ]]; then
-    xrandr --output $1 --auto --output $2 --auto --right-of $1
+    xrandr --output $1 --primary --output $2 --auto --right-of $1
   elif [ $2 == 'DP-3' ] && [[ $1 == 'DP-'[3,7,1] ]]; then
-    xrandr --output $2 --auto --output $1 --auto --right-of $2
+    xrandr --output $2 --primary --output $1 --auto --right-of $2
   else
     exit 0 # Do not want this to occur as it would leave one monitor off 
   fi
