@@ -91,11 +91,6 @@ fi
 # -----------------------------------------------------------------------------
 #                         Automatic Display Handling
 # -----------------------------------------------------------------------------
-# Due to a gdm issue that results in warped login backgrounds on multiple displays
-# this script aims to detect the connected displays and disable the secondary monitor
-# until a login is achieved at which point the PreSession script will reinitilize all displays
-# according to established standards, though special modifications may have to be made.
-# -----------------------------------------------------------------------------
 # Gets the number of connected displays (a physically connected but off monitor is still connected)
 NUM_DISPLAYS=$(xrandr | grep -w connected | wc -l)
 #Creates a space separated list of all of the connected displays (Ex: DP-0 DVI-I-1)
@@ -104,22 +99,35 @@ LIST_DISPLAYS=$(xrandr | grep -w connected | cut -d' ' -f1)
 set -- $LIST_DISPLAYS
 # If the system has only one display or more than two, let gdm handle it automatically
 if [ $NUM_DISPLAYS != '2']; then
-  exit 0 #Should I set the only display manually or just let gdm take over?
+  exit 0 
 else
-  echo "More than one display detected."
   # Begin checking detected displays against known configurations
   # The "first" display is ambiguous, so the reverse of every check has to occur
   # ---------------------------------------------------------------------------
-  # 2017 - New Z240s with 4 miniDisplayPort Connectors
-  if [ $1 == "DP-0" ] && [ $2 == "DP-2" ]; then
+  # 2017 - New Z240s with 4 miniDisplayPort Connectors - 
+  # DC Dual monitor workstations
+  #
+  if [ $1 == 'DP-0' ] && [[ $2 == 'DP-'[2,4,6] ]]; then
     xrandr --output $1 --auto --output $2 --off
-  elif [ $2 == "DP-0" ] && [ $1 == "DP-2" ]; then
+  elif [ $2 == 'DP-0' ] && [[ $1 == 'DP-'[2,4,6] ]]; then
     xrandr --output $3 --auto --output $1 --off
   # 2017 - Older Z220/230/240 Machines with one display port and one DVI
-  elif [ $1 == "DP-1" ] && [ $2 == "DVI-I-1" ]; then
+  # EECS 4440 - Lectern (DP-1) Crestron (DVI-I-0)
+  # GFL 224 - Lectern (DP-1) Crestron (DVI-I-1) - most common crestron configuration
+  elif [ $1 == 'DP-1' ] && [[ $2 == 'DVI-I-'* ]]; then # How likely is it to see DVI-I-[0-XX]?
     xrandr --output $1 --auto --output $2 --off
-  elif [ $2 == "DP-1" ] && [ $1 == "DVI-I-1" ]; then
+  elif [ $2 == 'DP-1' ] && [[ $1 == 'DVI-I-'* ]]; then 
     xrandr --output $2 --auto --output $1 --off
+  # GGBL 2517 - z240 with miniDP->DP (Lecturn Monitor) & miniDP->HDMI (Crestron/Wall displays)
+  # The Lecturn monitor's miniDP adpater has to be plugged into DP-0 otherwise the bios/bootloader
+  # will not appear if the wall mounted displays are off
+  # The adapters cause DP-0->DP-3, DP-2->DP-1, DP-4->DP-5, DP-6->DP-7
+  elif [ $1 == 'DP-3' ] && [[ $2 == 'DP-'[3,7,1] ]]; then
+    xrandr --output $1 --auto --output $2 --off
+  elif [ $2 == 'DP-3' ] && [[ $1 == 'DP-'[3,7,1] ]]; then
+    xrandr --output $2 --auto --output $1 --off
+  # No specified pattern found, exits and lets GDM handle it.
+  # Hopefully will never happen, but could be the result of DP-[0,1,3] being unplugged/switched
   else
     exit 0
   fi

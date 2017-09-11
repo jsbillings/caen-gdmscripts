@@ -1,9 +1,4 @@
 #!/bin/sh
-# -----------------------------------------------------------------------------
-# This is the second of the two gdm display handling scripts. This one runs after
-# login and sets the connected displays according to established standards, as
-# well as any custom configurations as needed.
-# -----------------------------------------------------------------------------
 # Same as the inital script, get the number of connected displays
 NUM_DISPLAYS=$(xrandr | grep -w connected | wc -l)
 #Propogates a list of all the displays connected as a space separated list(example: DP-0 DVI-I-1)
@@ -20,16 +15,26 @@ else
   # Display Port Monitor on the Left, DVI (or higher numbered DP) on the right
   # The --auto flag is required even with the --right-of flag if you want the display to turn on
   # 2017 - New Z240s with 4 miniDisplayPort Connectors
-  if [ $1 == "DP-0" ] && [ $2 == "DP-2" ]; then
+  if [ $1 == 'DP-0' ] && [[ $2 == 'DP-'[2,4,6] ]]; then
     xrandr --output $1 --primary --output $2 --auto --right-of $1
-  elif [ $2 == "DP-0" ] && [ $1 == "DP-2" ]; then
-    xrandr --output $2 --primary --output $1 --auto --right-of $2
+  elif [ $2 == 'DP-0' ] && [[ $1 == 'DP-'[2,4,6] ]]; then
+    xrandr --output $1 --primary --output $1 --auto --right-of $2
   # 2017 - Older Machines with one display port and one DVI
-  elif [ $1 == "DP-1" ] && [ $2 == "DVI-I-1" ]; then
+  # EECS 440 Lectern (DP-1) Crestron (DVI-I-0)
+  # GFL 224 - Lectern (DP-1) Crestron (DVI-I-1) - most common crestron configuration
+  elif [ $1 == 'DP-1' ] && [[ $2 == 'DVI-I-'* ]]; then # How likely is it to see DVI-I-[0-XX]?
     xrandr --output $1 --primary --output $2 --auto --right-of $1
-  elif [ $2 == "DP-1" ] && [ $1 == "DVI-I-1" ]; then
+  elif [ $2 == 'DP-1' ] && [[ $1 == 'DVI-I-'* ]]; then 
     xrandr --output $2 --primary --output $1 --auto --right-of $2
+  # GGBL 2517 - z240 with miniDP->DP (Lecturn Monitor) & miniDP->HDMI (Crestron/Wall displays)
+  # The Lecturn monitor's miniDP adpater has to be plugged into DP-0 otherwise the bios/bootloader
+  # will not appear if the wall mounted displays are off
+  # The adapters cause DP-0->DP-3, DP-2->DP-1, DP-4->DP-5, DP-6->DP-7
+  elif [ $1 == 'DP-3' ] && [[ $2 == 'DP-'[3,7,1] ]]; then
+    xrandr --output $1 --auto --output $2 --auto --right-of $1
+  elif [ $2 == 'DP-3' ] && [[ $1 == 'DP-'[3,7,1] ]]; then
+    xrandr --output $2 --auto --output $1 --auto --right-of $2
   else
-    exit 0 # Do not want this to occur as it would leave one monitor off
+    exit 0 # Do not want this to occur as it would leave one monitor off 
   fi
 fi
