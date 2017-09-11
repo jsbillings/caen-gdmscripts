@@ -119,7 +119,7 @@ else
   elif [ $2 == 'DP-1' ] && [[ $1 == 'DVI-I-'* ]]; then 
     xrandr --output $2 --auto --output $1 --off
   # GGBL 2517 - z240 with miniDP->DP (Lecturn Monitor) & miniDP->HDMI (Crestron/Wall displays)
-  # The Lecturn monitor's miniDP adpater has to be plugged into DP-0 otherwise the bios/bootloader
+  # The Lecturn monitor's miniDP adapter has to be plugged into DP-0 otherwise the bios/bootloader
   # will not appear if the wall mounted displays are off
   # The adapters cause DP-0->DP-3, DP-2->DP-1, DP-4->DP-5, DP-6->DP-7
   elif [ $1 == 'DP-3' ] && [[ $2 == 'DP-'[3,7,1] ]]; then
