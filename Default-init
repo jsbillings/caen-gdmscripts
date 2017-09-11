@@ -110,7 +110,7 @@ else
   if [ $1 == 'DP-0' ] && [[ $2 == 'DP-'[2,4,6] ]]; then
     xrandr --output $1 --auto --output $2 --off
   elif [ $2 == 'DP-0' ] && [[ $1 == 'DP-'[2,4,6] ]]; then
-    xrandr --output $3 --auto --output $1 --off
+    xrandr --output $2 --auto --output $1 --off
   # 2017 - Older Z220/230/240 Machines with one display port and one DVI
   # EECS 4440 - Lectern (DP-1) Crestron (DVI-I-0)
   # GFL 224 - Lectern (DP-1) Crestron (DVI-I-1) - most common crestron configuration
