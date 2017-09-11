@@ -92,7 +92,7 @@ fi
 #                         Automatic Display Handling
 # -----------------------------------------------------------------------------
 # Gets the number of connected displays (a physically connected but off monitor is still connected)
-NUM_DISPLAYS=$(xrandr | grep -w connected | wc -l)
+NUM_DISPLAYS=$(xrandr | grep -cw connected)
 #Creates a space separated list of all of the connected displays (Ex: DP-0 DVI-I-1)
 LIST_DISPLAYS=$(xrandr | grep -w connected | cut -d' ' -f1)
 # Allow the connected displays to be called in the order they appear $1 $2 ...

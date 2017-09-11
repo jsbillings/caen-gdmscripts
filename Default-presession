@@ -1,6 +1,6 @@
 #!/bin/sh
 # Same as the inital script, get the number of connected displays
-NUM_DISPLAYS=$(xrandr | grep -w connected | wc -l)
+NUM_DISPLAYS=$(xrandr | grep -cw connected )
 #Propogates a list of all the displays connected as a space separated list(example: DP-0 DVI-I-1)
 LIST_DISPLAYS=$(xrandr | grep -w connected | cut -d' ' -f1)
 # Allow the connected displays to be called in the order they appear $1 $2 ...
