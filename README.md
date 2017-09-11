@@ -1,5 +1,5 @@
 # caen-gdmscripts
-Scripts aimed to handle multiple display delegration both pre and post login in RHEL 7
+Scripts aimed to handle multiple display delegation both pre and post login in RHEL 7
 
 Due to a gdm issue in RHEL that results in warped login backgrounds on multiple displays and to correct default monitor arrangement, these scripts aim to detect the connected displays and disable the secondary monitor until a login is achieved at which point the PreSession script will reinitilize all displays according to established standards. 
 
